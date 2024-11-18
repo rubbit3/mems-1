@@ -1,6 +1,12 @@
 package wxy;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
+import org.bson.Document;
+import redis.clients.jedis.Jedis;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,6 +15,7 @@ import java.util.ArrayList;
 
 
 import static wxy.main.jedisPool;
+import static wxy.main.mongoClient;
 import static wxy.tool.ByteArrayToInt;
 
 /**
@@ -71,8 +78,8 @@ public class SzfzyMEMSClient {
             sum = sum + (int) (b[offset + i] & 0xFF);
         }
 //		System.out.println("累加了次数："+len);
-		System.out.println("校验位是："+CheckBit);
-		System.out.println("数据包长度是："+sum);
+        System.out.println("校验位是：" + CheckBit);
+        System.out.println("数据包长度是：" + sum);
         if (sum == CheckBit) {
             return true;
         } else {
@@ -183,10 +190,8 @@ public class SzfzyMEMSClient {
                             System.out.println("采样率是：" + nSPS);
 
 
-
-
                             //根据采样率 有倾角数据的情况，注意这里的修改
-							int dataLen = 4 + 4 + 4 + 4 + 12 + 12 + 8 + nSPS * 12 + nSPS * 12;
+                            int dataLen = 4 + 4 + 4 + 4 + 12 + 12 + 8 + nSPS * 12 + nSPS * 12;
                             // 无倾角数据的情况
 //                            int dataLen = 4 + 4 + 4 + 4 + 12 + 12 + 8 + nSPS * 12;
 
@@ -269,6 +274,7 @@ public class SzfzyMEMSClient {
                             String[] times = timeTmp.split(" ");
                             String timeStr = times[0] + times[1] + "-" + times[2] + "-" + times[3] + " " + times[4] + ":" + times[5] + ":" + times[6];
 
+                            System.out.println("时间戳是：" + timeStr);
                             long _time = tool.StrToTime(timeStr);
                             _time = _time + 1000 * 60 * 60 * 8;
 
@@ -277,7 +283,7 @@ public class SzfzyMEMSClient {
                             }
 
                             //毫秒单位
-//							System.out.println("时间戳就是是："+time);
+							System.out.println("时间戳就是是："+time);
 
                             // 组装 JSON 数据
                             JSONObject jsonObject = new JSONObject();
@@ -335,14 +341,13 @@ public class SzfzyMEMSClient {
                             jsonObject.put("qj2", j2);
                             jsonObject.put("qj3", j3);
 
-//							try (Jedis jedis = jedisPool.getResource()) {
-//								jedis.select(1);
-//								jedis.rpush(mac, jsonObject.toString());
+							try (Jedis jedis = jedisPool.getResource()) {
+								jedis.select(1);
+								jedis.rpush(mac, jsonObject.toString());
 //								jedis.ltrim(mac, -1200, -1);
-//							}
+							}
 //                          开始处理数据
-                            System.out.println("jsonObject is " + jsonObject.toString());
-
+//                            System.out.println("jsonObject is " + jsonObject.toString());
 
                         }
 
