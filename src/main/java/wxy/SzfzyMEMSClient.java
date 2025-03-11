@@ -77,9 +77,7 @@ public class SzfzyMEMSClient {
         for (int i = 0; i < len; i++) {
             sum = sum + (int) (b[offset + i] & 0xFF);
         }
-//		System.out.println("累加了次数："+len);
-        System.out.println("校验位是：" + CheckBit);
-        System.out.println("数据包长度是：" + sum);
+
         if (sum == CheckBit) {
             return true;
         } else {
@@ -165,10 +163,6 @@ public class SzfzyMEMSClient {
                          * 处理流程
                          */
 
-
-                        ArrayList<DataPackage> dpkList = new ArrayList<DataPackage>();
-
-
                         while (true) {
                             //检验头
                             int offset = FindHeadFrame(BytesCache, FrameHead);
@@ -184,10 +178,8 @@ public class SzfzyMEMSClient {
                             //获取采样率
                             readIndex = readIndex + 4;
 
-
                             // 读取采样率，根据索引位置读取数据 字节数据转为int整数
                             int nSPS = ByteArrayToInt(BytesCache, readIndex);
-                            System.out.println("采样率是：" + nSPS);
 
 
                             //根据采样率 有倾角数据的情况，注意这里的修改
@@ -205,9 +197,6 @@ public class SzfzyMEMSClient {
                             byte[] m_data = new byte[dataLen];
                             // offset is  start 0
                             System.arraycopy(BytesCache, offset, m_data, 0, dataLen);
-
-//							System.out.println("m_data的数据长度是"+m_data.length);
-
 
                             // 检查数据包是否有效
 //							if(!CheckPackage(m_data,8,dataLen - 8))
@@ -233,8 +222,6 @@ public class SzfzyMEMSClient {
                                 BytesCache = null;
                             }
 
-//							System.out.println("数据包长度是："+dataLen);
-//							System.out.println("校验通过，开始读取其他数据");
                             //时间
                             long time = System.currentTimeMillis();
 
@@ -248,11 +235,11 @@ public class SzfzyMEMSClient {
 
                             //获取纬度
                             index = index + 4;
-                            nLat[0] = ByteArrayToInt(m_data, index);
+//                            nLat[0] = ByteArrayToInt(m_data, index);
                             index = index + 4;
-                            nLat[1] = ByteArrayToInt(m_data, index);
+//                            nLat[1] = ByteArrayToInt(m_data, index);
                             index = index + 4;
-                            nLat[2] = ByteArrayToInt(m_data, index);
+//                            nLat[2] = ByteArrayToInt(m_data, index);
 
 //							System.out.println("纬度："+nLat[0]+" "+nLat[1]+" "+nLat[2]);
                             //获取经度
@@ -266,34 +253,33 @@ public class SzfzyMEMSClient {
 //							System.out.println("经度："+nLong[0]+" "+nLong[1]+" "+nLong[2]);
                             //获取时间，读取8个字节
                             index = index + 4;
-                            System.arraycopy(m_data, index, cTime, 0, 8);
+//                            System.arraycopy(m_data, index, cTime, 0, 8);
 
                             //20 00 01 01 05 25 25 00
-                            String timeTmp = tool.bytesToHexStringL(cTime);
+//                            String timeTmp = tool.bytesToHexStringL(cTime);
 //							System.out.println("bcd码字节数组元素转换之后的时间戳是："+timeTmp); 时间间隔使用空格，隔开
-                            String[] times = timeTmp.split(" ");
-                            String timeStr = times[0] + times[1] + "-" + times[2] + "-" + times[3] + " " + times[4] + ":" + times[5] + ":" + times[6];
+//                            String[] times = timeTmp.split(" ");
+//                            String timeStr = times[0] + times[1] + "-" + times[2] + "-" + times[3] + " " + times[4] + ":" + times[5] + ":" + times[6];
 
-                            System.out.println("时间戳是：" + timeStr);
-                            long _time = tool.StrToTime(timeStr);
-                            _time = _time + 1000 * 60 * 60 * 8;
-
-                            if (_time >= time - 1000 * 60 * 60 * 24) {
-                                time = _time;
-                            }
+//                            System.out.println("时间是：" + timeStr);
+//                            long _time = tool.StrToTime(timeStr);
+//                            _time = _time + 1000 * 60 * 60 * 8;
+//
+//                            if (_time >= time - 1000 * 60 * 60 * 24) {
+//                                time = _time;
+//                            }
 
                             //毫秒单位
-							System.out.println("时间戳就是是："+time);
+//							System.out.println("时间戳是："+time);
 
                             // 组装 JSON 数据
                             JSONObject jsonObject = new JSONObject();
-                            jsonObject.put("latitude", new int[]{nLat[0], nLat[1], nLat[2]});
-                            jsonObject.put("longitude", new int[]{nLong[0], nLong[1], nLong[2]});
-                            jsonObject.put("timestamp", time / 1000);
+//                            jsonObject.put("latitude", new int[]{nLat[0], nLat[1], nLat[2]});
+//                            jsonObject.put("longitude", new int[]{nLong[0], nLong[1], nLong[2]});
+                            jsonObject.put("timestamp", time);
                             jsonObject.put("nSPS", nSPS);
+                            System.out.println("timestamp：" + time);
 
-
-//							System.out.println("timestamp is"+ time/1000);
 
 //							index = index + 8;
 
@@ -324,36 +310,29 @@ public class SzfzyMEMSClient {
                                 f3[i] = tool.ByteArrayToFloat(all, i * 12 + 8);
                             }
 
-//							System.out.println("通道3数据："+ Arrays.toString(f3));
                             for (int i = 0; i < channelSize; i++) {
                                 j1[i] = tool.ByteArrayToFloat(jqData, i * 12);
                                 j2[i] = tool.ByteArrayToFloat(jqData, i * 12 + 4);
                                 j3[i] = tool.ByteArrayToFloat(jqData, i * 12 + 8);
                             }
+                            jsonObject.put("ch1", f1);
+                            jsonObject.put("ch2", f2);
+                            jsonObject.put("ch3", f3);
 
-                            jsonObject.put("channel1", f1);
-                            jsonObject.put("channel2", f2);
-                            jsonObject.put("channel3", f3);
+                            jsonObject.put("ch4", j1);
+                            jsonObject.put("ch5", j2);
+                            jsonObject.put("ch6", j3);
+                            String string = jsonObject.toString();
+                            System.out.println(string);
 
-//							System.out.println("channel1 data is"+f1[0]);
+                            try (Jedis jedis = jedisPool.getResource()) {
+                                jedis.select(1);
+                                jedis.rpush(mac, string);
+                                jedis.ltrim(mac, -5000, -1);
+                            }
 
-                            jsonObject.put("qj1", j1);
-                            jsonObject.put("qj2", j2);
-                            jsonObject.put("qj3", j3);
-
-							try (Jedis jedis = jedisPool.getResource()) {
-								jedis.select(1);
-								jedis.rpush(mac, jsonObject.toString());
-//								jedis.ltrim(mac, -1200, -1);
-							}
-//                          开始处理数据
-//                            System.out.println("jsonObject is " + jsonObject.toString());
 
                         }
-
-
-                        dpkList.clear();
-                        dpkList = null;
 
                         if (BytesCache != null && BytesCache.length > 1024 * 1024 * 10) {
                             BytesCache = null;

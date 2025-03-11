@@ -35,34 +35,12 @@ public class main {
     /**
      * mems1型设备数据读取
      *
-     * @param args
      */
     public static void main(String[] args) {
 
 // 创建连接对象
-        SzfzyMEMSClient szfzyMEMSClient2 = new SzfzyMEMSClient("192.168.100.2", "mems1-1-test");
-
-        addDataThread addDataThread = new addDataThread("testdata");
-
-// 使用Thread来并行执行
-        Thread connectThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                szfzyMEMSClient2.Connect();
-            }
-        });
-
-        Thread dataThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                addDataThread.addData();
-            }
-        });
-
-// 启动两个线程
-        connectThread.start();
-        dataThread.start();
-
+        SzfzyMEMSClient szfzyMEMSClient2 = new SzfzyMEMSClient("192.168.55.2", "55-2");
+        szfzyMEMSClient2.Connect();
     }
 
 
