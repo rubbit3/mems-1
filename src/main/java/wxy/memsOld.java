@@ -1,21 +1,14 @@
 package wxy;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Indexes;
-import org.bson.Document;
 import redis.clients.jedis.Jedis;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 
 
 import static wxy.main.jedisPool;
-import static wxy.main.mongoClient;
 import static wxy.tool.ByteArrayToInt;
 
 /**
@@ -23,7 +16,7 @@ import static wxy.tool.ByteArrayToInt;
  * <p>
  * 深圳防灾院 MEMS加速度计 设备客户端
  */
-public class SzfzyMEMSClient {
+public class memsOld {
 
     private int dataPort = 6000;
     public String ip = "";
@@ -34,8 +27,7 @@ public class SzfzyMEMSClient {
     public connectThread thread = null;
     private byte[] FrameHead = {(byte) 0xCC, (byte) 0xEE, 0x55, (byte) 0xAA};
 
-
-    public SzfzyMEMSClient(String ip, String mac) {
+    public memsOld(String ip, String mac) {
         this.ip = ip;
         this.mac = mac;
     }
@@ -99,11 +91,8 @@ public class SzfzyMEMSClient {
 
         @Override
         public void run() {
-            MongoDatabase database = mongoClient.getDatabase("datamems1");
+//			MongoDatabase database = MongoDBUtil.getDatabase();
             int checkTimes = 0;
-            MongoCollection<Document> collection = database.getCollection(mac);
-            collection.createIndex(Indexes.ascending("timestamp"));
-            long currentTimestamp = System.currentTimeMillis() / 1000; // 转换为秒级时间戳
             while (true) {
                 try {
                     try {
@@ -141,6 +130,8 @@ public class SzfzyMEMSClient {
 
                         byte[] b = new byte[len];
                         ins.read(b); // 把数据读入b数组中，之后主要操作这个b数组
+//						System.out.println("数据是："+tool.ByteArrayToHexString(b));
+                        // 刚开始的数据存储也是空的，直接把原始的数据数组拷贝存储到数据缓存当中
                         if (BytesCache == null) {
                             BytesCache = new byte[b.length];
                             System.arraycopy(b, 0, BytesCache, 0, b.length);
@@ -225,8 +216,7 @@ public class SzfzyMEMSClient {
                             }
 
                             //时间
-//                            long time = System.currentTimeMillis();
-
+                            long time = System.currentTimeMillis();
 
                             //数据索引开始
                             int index = 12;
@@ -244,7 +234,7 @@ public class SzfzyMEMSClient {
                             index = index + 4;
 //                            nLat[2] = ByteArrayToInt(m_data, index);
 
-
+//							System.out.println("纬度："+nLat[0]+" "+nLat[1]+" "+nLat[2]);
                             //获取经度
                             index = index + 4;
                             nLong[0] = ByteArrayToInt(m_data, index);
@@ -253,17 +243,36 @@ public class SzfzyMEMSClient {
                             index = index + 4;
                             nLong[2] = ByteArrayToInt(m_data, index);
 
-
+//							System.out.println("经度："+nLong[0]+" "+nLong[1]+" "+nLong[2]);
                             //获取时间，读取8个字节
                             index = index + 4;
+//                            System.arraycopy(m_data, index, cTime, 0, 8);
 
+                            //20 00 01 01 05 25 25 00
+//                            String timeTmp = tool.bytesToHexStringL(cTime);
+//							System.out.println("bcd码字节数组元素转换之后的时间戳是："+timeTmp); 时间间隔使用空格，隔开
+//                            String[] times = timeTmp.split(" ");
+//                            String timeStr = times[0] + times[1] + "-" + times[2] + "-" + times[3] + " " + times[4] + ":" + times[5] + ":" + times[6];
+
+//                            System.out.println("时间是：" + timeStr);
+//                            long _time = tool.StrToTime(timeStr);
+//                            _time = _time + 1000 * 60 * 60 * 8;
+//
+//                            if (_time >= time - 1000 * 60 * 60 * 24) {
+//                                time = _time;
+//                            }
+
+                            //毫秒单位
+//							System.out.println("时间戳是："+time);
 
                             // 组装 JSON 数据
                             JSONObject jsonObject = new JSONObject();
-                            jsonObject.put("timestamp", currentTimestamp);
+//                            jsonObject.put("latitude", new int[]{nLat[0], nLat[1], nLat[2]});
+//                            jsonObject.put("longitude", new int[]{nLong[0], nLong[1], nLong[2]});
+                            jsonObject.put("timestamp", time);
                             jsonObject.put("nSPS", nSPS);
-                            System.out.println("timestamp：" + currentTimestamp);
-                            currentTimestamp += 1;
+                            System.out.println("timestamp：" + time);
+
 
 //							index = index + 8;
 
@@ -307,11 +316,8 @@ public class SzfzyMEMSClient {
                             jsonObject.put("ch5", j2);
                             jsonObject.put("ch6", j3);
                             String string = jsonObject.toString();
-//                            System.out.println(string);
+                            System.out.println(string);
 
-                            // 将 JSON 字符串转换为 Document 对象并插入到 MongoDB
-                            Document document = Document.parse(string);
-                            collection.insertOne(document);
                             try (Jedis jedis = jedisPool.getResource()) {
                                 jedis.select(1);
                                 jedis.rpush(mac, string);

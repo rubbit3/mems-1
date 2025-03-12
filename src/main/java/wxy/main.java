@@ -4,6 +4,7 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -28,13 +29,10 @@ public class main {
                 .applyConnectionString(connectionString)
                 .build();
         mongoClient = MongoClients.create(settings);
-
-
     }
 
     /**
      * mems1型设备数据读取
-     *
      */
     public static void main(String[] args) {
 
