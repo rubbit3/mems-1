@@ -14,8 +14,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 
-import static wxy.main.jedisPool;
-import static wxy.main.mongoClient;
+import static wxy.main.*;
 import static wxy.tool.ByteArrayToInt;
 
 /**
@@ -299,6 +298,9 @@ public class SzfzyMEMSClient {
                                 j2[i] = tool.ByteArrayToFloat(jqData, i * 12 + 4);
                                 j3[i] = tool.ByteArrayToFloat(jqData, i * 12 + 8);
                             }
+
+                            Stats stats = calculateStats(f1, f2, f3, j1, j2, j3);
+
                             jsonObject.put("ch1", f1);
                             jsonObject.put("ch2", f2);
                             jsonObject.put("ch3", f3);

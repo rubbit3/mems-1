@@ -31,6 +31,54 @@ public class main {
         mongoClient = MongoClients.create(settings);
     }
 
+    public static Stats calculateStats(float[]... arrays) {
+        float max = 0;
+        float min = 0;
+        float sum = 0;
+        float mean = 0;
+        float range = 0;
+        int totalElements = 0;
+
+        // 遍历所有数组
+        for (float[] array : arrays) {
+            for (float value : array) {
+                // 更新最大值
+                if (value > max) {
+                    max = value;
+                }
+                // 更新最小值
+                if (value < min) {
+                    min = value;
+                }
+                // 累加元素值
+                sum += value;
+                totalElements++;
+            }
+        }
+
+        // 计算均值
+        mean = totalElements > 0 ? sum / totalElements : 0;
+        // 计算最大值减去最小值
+        range = max - min;
+
+        return new Stats(max, min, mean, range);
+    }
+
+    static class Stats {
+        float max;
+        float min;
+        float mean;
+        float range;
+
+        public Stats(float max, float min, float mean, float range) {
+            this.max = max;
+            this.min = min;
+            this.mean = mean;
+            this.range = range;
+        }
+    }
+
+
     /**
      * mems1型设备数据读取
      */
