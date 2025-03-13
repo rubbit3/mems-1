@@ -101,7 +101,9 @@ public class SzfzyMEMSClient {
             MongoDatabase database = mongoClient.getDatabase("datamems1");
             int checkTimes = 0;
             MongoCollection<Document> collection = database.getCollection(mac);
+            MongoCollection<Document> collectiondata = database.getCollection(mac + "data");
             collection.createIndex(Indexes.ascending("timestamp"));
+            collectiondata.createIndex(Indexes.ascending("timestamp"));
             long currentTimestamp = System.currentTimeMillis() / 1000; // 转换为秒级时间戳
             while (true) {
                 try {
@@ -262,6 +264,11 @@ public class SzfzyMEMSClient {
                             jsonObject.put("timestamp", currentTimestamp);
                             jsonObject.put("nSPS", nSPS);
                             System.out.println("timestamp：" + currentTimestamp);
+
+                            JSONObject jsonObjectdata = new JSONObject();
+                            jsonObjectdata.put("jsonObjectdata", currentTimestamp);
+                            jsonObjectdata.put("nSPS", nSPS);
+
                             currentTimestamp += 1;
 
 //							index = index + 8;
@@ -301,6 +308,11 @@ public class SzfzyMEMSClient {
 
                             Stats stats = calculateStats(f1, f2, f3, j1, j2, j3);
 
+                            jsonObjectdata.put("max", stats.max);
+                            jsonObjectdata.put("min", stats.min);
+                            jsonObjectdata.put("mean", stats.mean);
+                            jsonObjectdata.put("range", stats.range);
+
                             jsonObject.put("ch1", f1);
                             jsonObject.put("ch2", f2);
                             jsonObject.put("ch3", f3);
@@ -314,6 +326,7 @@ public class SzfzyMEMSClient {
                             // 将 JSON 字符串转换为 Document 对象并插入到 MongoDB
                             Document document = Document.parse(string);
                             collection.insertOne(document);
+                            collectiondata.insertOne(Document.parse(jsonObjectdata.toString()));
                             try (Jedis jedis = jedisPool.getResource()) {
                                 jedis.select(1);
                                 jedis.rpush(mac, string);
